@@ -7,10 +7,25 @@ const pool = mysql.createPool(poolForPractive);
 const query = util.promisify(pool.query).bind(pool);
 
 class UserModel {
-  static async getUsers() {
+  static async getUsers(pageNumber, pageSize) {
     try {
-      const users = await query('SELECT * FROM users');
-      return users;
+
+      // const users = await query('SELECT * FROM users');
+      const offset = (pageNumber - 1) * (pageSize || 10);
+      const users = await query(`SELECT * FROM users LIMIT ${pageSize || 10} OFFSET ${offset || 0}`);
+
+      const total = await query(`SELECT COUNT(*) as total FROM users`);
+      return {
+        responseType: 1,
+        responseTypeMessage: 'success',
+        data: {
+          list: users,
+          total: total[0].total,
+          pageNumber: pageNumber,
+          pageSize: pageSize
+        }
+
+      };
     } catch (error) {
       throw error;
     }
